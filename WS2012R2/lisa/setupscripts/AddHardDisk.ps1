@@ -19,8 +19,6 @@
 #
 ########################################################################
 
-
-
 <#
 .Synopsis
     Setup script that will add a Hard disk to a VM.
@@ -110,18 +108,15 @@
     Test data for this test case
 
 .Example
-    setupScripts\AddHardDisk -vmName sles11sp3x64 -hvServer localhost -testParams "SCSI=0,0,Dynamic;sshkey=rhel5_id_rsa.ppk;ipv4=IPaddress;RootDir="
+    setupScripts\AddHardDisk -vmName VMname -hvServer localhost -testParams "SCSI=0,0,Dynamic;sshkey=PKI.ppk;ipv4=IPaddress;RootDir="
 
 .Link
     None.
 #>
 
-
-
 param([string] $vmName, [string] $hvServer, [string] $testParams)
 
 $global:MinDiskSize = "1GB"
-
 
 #######################################################################
 #
@@ -154,7 +149,6 @@ function GetRemoteFileInfo([String] $filename, [String] $server )
 
     return $fileInfo
 }
-
 
 ############################################################################
 #
@@ -223,7 +217,6 @@ function CreateController([string] $vmName, [string] $server, [string] $controll
     }
 }
 
-
 ############################################################################
 #
 # GetPhysicalDiskForPassThru
@@ -244,9 +237,7 @@ function GetPhysicalDiskForPassThru([string] $server)
     #
     foreach ($a in $PhysicalDiskResource)
     {
-
         $PhysDisksInUse += $a.HostResource
-
     }
 
     #
@@ -286,7 +277,6 @@ function ConvertStringToUInt64([string] $str)
         return $null
     }
 
-
     if ($newSize.EndsWith("MB"))
     {
         $num = $newSize.Replace("MB","")
@@ -308,11 +298,8 @@ function ConvertStringToUInt64([string] $str)
         return $null
     }
 
-
     return $uint64Size
 }
-
-
 
 ############################################################################
 #
@@ -386,7 +373,6 @@ function CreatePassThruDrive([string] $vmName, [string] $server, [switch] $scsi,
 
     return $retVal
 }
-
 
 ############################################################################
 #
@@ -526,8 +512,6 @@ function CreateHardDrive( [string] $vmName, [string] $server, [System.Boolean] $
     return $retVal
 }
 
-
-
 ############################################################################
 #
 # Main entry point for script
@@ -559,7 +543,6 @@ if ($testParams -eq $null -or $testParams.Length -lt 3)
     "       AddHardDisk.ps1 requires test params"
     return $false
 }
-
 
 #
 # Parse the testParams string

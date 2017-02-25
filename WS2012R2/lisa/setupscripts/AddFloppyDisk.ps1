@@ -109,7 +109,7 @@ $defaultVhdPath=$hostInfo.VirtualHardDiskPath
 
 $vfdPath = "${defaultVhdPath}${vmName}.vfd"
 
-$fileInfo = GetRemoteFileInfo -filename $vfdPath -hvServer $hvServer
+$fileInfo = GetRemoteFileInfo $vfdPath $hvServer
 if (-not $fileInfo)
 {
     #

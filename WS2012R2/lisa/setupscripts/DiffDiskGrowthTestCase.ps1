@@ -21,8 +21,8 @@
 
 <#
 .Synopsis
-    This test script, which runs inside VM it mount the dirve and perform write operation on diff disk.
-    And checks to ensure that parent disk size does not change.
+    This test script, which runs inside VM it mount the drive and perform write operations on diff disk.
+    It then checks to ensure that parent disk size does not change.
 
 .Description
     ControllerType=Controller Index, Lun or Port, vhd type
@@ -37,8 +37,8 @@
                              Dynamic
                              Fixed
                              Diff (Differencing)
-   The following are some examples
 
+   The following are some examples:
    SCSI=0,0,Diff : Add a hard drive on SCSI controller 0, Lun 0, vhd type of Dynamic
    IDE=1,1,Diff  : Add a hard drive on IDE controller 1, IDE port 1, vhd type of Diff
 
@@ -76,6 +76,18 @@
 #>
 
 param ([String] $vmName, [String] $hvServer, [String] $testParams)
+
+$controllerType = $null
+$controllerID = $null
+$lun = $null
+$vhdType = $null
+$vhdName = $null
+$parentVhd = $null
+$sshKey = $null
+$ipv4 = $null
+$TC_COVERED = $null
+$vhdFormat = $null
+$vmGeneration = $null 
 
 ######################################################################
 # Runs a remote script on the VM an returns the log.
@@ -234,38 +246,6 @@ function RunRemoteScript($remoteScript)
     return $retValue
 }
 
-#######################################################################
-#
-# GetRemoteFileInfo()
-#
-# Description:
-#     Use WMI to retrieve file information for a file residing on the
-#     Hyper-V server.
-#
-# Return:
-#     A FileInfo structure if the file exists, null otherwise.
-#
-#######################################################################
-function GetRemoteFileInfo([String] $filename, [String] $server )
-{
-    $fileInfo = $null
-
-    if (-not $filename)
-    {
-        return $null
-    }
-
-    if (-not $server)
-    {
-        return $null
-    }
-
-    $remoteFilename = $filename.Replace("\", "\\")
-    $fileInfo = Get-WmiObject -query "SELECT * FROM CIM_DataFile WHERE Name='${remoteFilename}'" -computer $server
-
-    return $fileInfo
-}
-
 ############################################################################
 #
 # Main script body
@@ -274,36 +254,6 @@ function GetRemoteFileInfo([String] $filename, [String] $server )
 $retVal = $False
 $remoteScript = "PartitionDisks.sh"
 
-#
-# Display a little info about our environment
-#
-"STOR_DiffDiskGrowthTestCase.ps1"
-"  vmName = ${vmName}"
-"  hvServer = ${hvServer}"
-"  testParams = ${testParams}"
-
-#
-# Make sure we have access to the Microsoft Hyper-V snapin
-#
-$hvModule = Get-Module Hyper-V
-if ($hvModule -eq $NULL)
-{
-    import-module Hyper-V
-    $hvModule = Get-Module Hyper-V
-}
-
-$controllerType = $null
-$controllerID = $null
-$lun = $null
-$vhdType = $null
-$vhdName = $null
-$parentVhd = $null
-$sshKey = $null
-$ipv4 = $null
-$TC_COVERED = $null
-$vhdFormat = $null
-
-$vmGeneration = $null 
 #
 # Parse the testParams string and make sure all
 # required test parameters have been specified.
@@ -327,7 +277,7 @@ foreach ($p in $params)
     $rValue = $tokens[1].Trim()
 
     #
-    # ParentVHD test param?
+    # ParentVHD test param
     #
     if ($lValue -eq "ParentVHD")
     {
@@ -453,6 +403,16 @@ if (-not $ipv4)
     return $False
 }
 
+# Source TCUtils.ps1 for common functions
+if (Test-Path ".\setupScripts\TCUtils.ps1") {
+	. .\setupScripts\TCUtils.ps1
+	"Info: Sourced TCUtils.ps1"
+}
+else {
+	"Error: Could not find setupScripts\TCUtils.ps1"
+	return $false
+}
+
 $hostInfo = Get-VMHost -ComputerName $hvServer
 if (-not $hostInfo)
 {
@@ -532,9 +492,9 @@ if (-not $parentFileInfo)
 
 $parentInitialSize = $parentFileInfo.FileSize
 
-# Format the disk
 Start-Sleep -Seconds 30
 
+# Format the disk
 $sts = RunRemoteScript $remoteScript
 if (-not $sts[-1])
 {
@@ -547,7 +507,6 @@ if (-not $sts[-1])
     return $False
 }
 
-# Write-Output "$remoteScript execution on VM: Success"
 Write-Output "Here are the remote logs:`n`n###################"
 $logfilename = ".\$remoteScript.log"
 Get-Content $logfilename
@@ -607,7 +566,7 @@ if ($parentFinalSize -eq $parentInitialSize)
 
 if ($vhdFinalSize -gt $vhdInitialSize)
 {
-    "Info : The differencing disk grew in size from ${vhdInitialSize} to ${vhdFinalSize}"
+    "Info: The differencing disk grew in size from ${vhdInitialSize} to ${vhdFinalSize}"
 }
 
 return $retVal

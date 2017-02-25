@@ -195,7 +195,7 @@ function CreateHardDrive( [string] $vmName, [string] $server, [System.Boolean] $
     }
 
     #
-    # If the hard drive exists, complain...
+    # If the hard drive already exists, return an error
     #
 
     $drive = Get-VMHardDiskDrive -VMName $vmName -ControllerNumber $controllerID -ControllerLocation $Lun -ControllerType $controllerType -ComputerName $server

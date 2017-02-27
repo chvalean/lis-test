@@ -132,10 +132,11 @@
 	<test>
             <testName>LISShutDownVMAndResetCpuCount</testName>
             <testScript>setupscripts\INST_LIS_TestVMShutdown.ps1</testScript>
-				<param>vCPU=4</param>
             <testParams>
                 <param>TC_COVERED=CORE-08</param>
+				<param>vCPU=4</param>
             </testParams>
+            <cleanupScript>setupScripts\ChangeCPU.ps1</cleanupScript>
             <timeout>600</timeout>
             <onError>Continue</onError>
         </test>

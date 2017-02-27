@@ -82,7 +82,6 @@
             <suiteTest>NMI_Send_Interrupt</suiteTest>
             <suiteTest>NMI_Verify_Interrupt</suiteTest>
             <suiteTest>NMI_different_vmStates</suiteTest>
-            <suiteTest>NMI_SendAs_Unprivileged</suiteTest>
 
             <suiteTest>VMBus_protocol_version</suiteTest>
             <suiteTest>VMBus_verify_interrupts</suiteTest>
@@ -222,12 +221,13 @@
     <test>
         <testName>LISShutDownVMAndResetCpuCount</testName>
         <testScript>setupscripts\INST_LIS_TestVMShutdown.ps1</testScript>
-        <cleanupScript>setupScripts\ResetCPU.ps1</cleanupScript>
         <timeout>600</timeout>
         <onError>Continue</onError>
         <testParams>
             <param>TC_COVERED=CORE-08</param>
+			<param>vCPU=4</param>
         </testParams>
+		<cleanupScript>setupScripts\ChangeCPU.ps1</cleanupScript>
     </test>
 
     <test>
@@ -1067,17 +1067,6 @@
         <noReboot>False</noReboot>
         <testParams>
             <param>TC_COVERED=NMI-01</param>
-        </testParams>
-    </test>
-
-    <test>
-        <testName>NMI_SendAs_Unprivileged</testName>
-        <testScript>setupscripts\NMI_SendAs_Unprivileged.ps1</testScript>
-        <timeout>300</timeout>
-        <onError>Continue</onError>
-        <noReboot>True</noReboot>
-        <testParams>
-            <param>TC_COVERED=NMI-02</param>
         </testParams>
     </test>
 

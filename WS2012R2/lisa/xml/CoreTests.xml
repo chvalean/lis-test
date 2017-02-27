@@ -132,7 +132,7 @@
 	<test>
             <testName>LISShutDownVMAndResetCpuCount</testName>
             <testScript>setupscripts\INST_LIS_TestVMShutdown.ps1</testScript>
-            <cleanupScript>setupScripts\ResetCPU.ps1</cleanupScript>
+				<param>vCPU=4</param>
             <testParams>
                 <param>TC_COVERED=CORE-08</param>
             </testParams>
@@ -160,6 +160,7 @@
                 <param>TC_COVERED=CORE-11</param>
             </testParams>
             <timeout>1600</timeout>
+            <onError>Continue</onError>
             <noReboot>False</noReboot>
         </test>
 
@@ -290,8 +291,8 @@
                 <param>NumaNodes=4</param>
                 <param>Sockets=2</param>
                 <param>MemSize=1024MB</param>
-		<param>staticMem=2048MB</param>
-		<param>memWeight=0</param>
+				<param>staticMem=2048MB</param>
+				<param>memWeight=0</param>
             </testParams>
             <timeout>600</timeout>
         </test>
@@ -409,18 +410,18 @@
 
     <VMs>
 	<vm>
-	<hvServer>localhost</hvServer>
-	<vmName>LinuxVM</vmName>
-	<os>Linux</os>
-	<ipv4></ipv4>
-	<sshKey>linux_id_rsa.ppk</sshKey>
-	<suite>Core</suite>
-	<testParams>
-		<param>publicKey=linux_id_rsa.pub</param>
-		<param>snapshotName=ICABase</param>
-		<!-- Required for CDmount -->
-		<param>IsoFilename=CDTEST.iso</param>
-	</testParams>
+		<hvServer>localhost</hvServer>
+		<vmName>LinuxVM</vmName>
+		<os>Linux</os>
+		<ipv4></ipv4>
+		<sshKey>linux_id_rsa.ppk</sshKey>
+		<suite>Core</suite>
+		<testParams>
+			<param>publicKey=linux_id_rsa.pub</param>
+			<param>snapshotName=ICABase</param>
+			<!-- Required for CDmount -->
+			<param>IsoFilename=CDTEST.iso</param>
+		</testParams>
 	</vm>
     </VMs>
 </config>

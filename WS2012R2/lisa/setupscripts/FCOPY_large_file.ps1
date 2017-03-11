@@ -60,54 +60,7 @@ $testfile = $null
 $gsi = $null
 # 10GB file size
 $filesize = 10737418240
-
-#######################################################################
-#
-#	Checks if the file copy daemon is running on the Linux guest
-#
-#######################################################################
-function check_fcopy_daemon()
-{
-	$filename = ".\fcopy_present"
-
-    .\bin\plink -i ssh\${sshKey} root@${ipv4} "ps -ef | grep '[h]v_fcopy_daemon\|[h]ypervfcopyd' > /tmp/fcopy_present"
-    if (-not $?) {
-        Write-Error -Message  "ERROR: Unable to verify if the fcopy daemon is running" -ErrorAction SilentlyContinue
-        Write-Output "ERROR: Unable to verify if the fcopy daemon is running"
-        return $False
-    }
-
-    .\bin\pscp -i ssh\${sshKey} root@${ipv4}:/tmp/fcopy_present .
-    if (-not $?) {
-		Write-Error -Message "ERROR: Unable to copy the confirmation file from the VM" -ErrorAction SilentlyContinue
-		Write-Output "ERROR: Unable to copy the confirmation file from the VM"
-		return $False
-    }
-
-    # When using grep on the process in file, it will return 1 line if the daemon is running
-    if ((Get-Content $filename  | Measure-Object -Line).Lines -eq  "1" ) {
-		Write-Output "Info: hv_fcopy_daemon process is running."
-		$retValue = $True
-    }
-
-    del $filename
-    return $retValue
-}
-
-#######################################################################
-#
-#	Checks if test file is present
-#
-#######################################################################
-function check_file([String] $testfile)
-{
-    .\bin\plink -i ssh\${sshKey} root@${ipv4} "wc -c < /mnt/$testfile"
-    if (-not $?) {
-        Write-Output "ERROR: Unable to read file /mnt/$testfile." -ErrorAction SilentlyContinue
-        return $False
-    }
-	return $True
-}
+$retVal = $false
 
 #######################################################################
 #
@@ -154,9 +107,6 @@ function mount_disk()
 #	Main body script
 #
 #######################################################################
-
-$retVal = $false
-
 # Checking the input arguments
 if (-not $vmName) {
     "Error: VM name is null!"
@@ -278,14 +228,16 @@ if (-not $?){
     .\bin\plink.exe -i ssh\${sshKey} root@${ipv4} "mkdir /tmp"
 }
 
-#
-# The fcopy daemon must be running on the Linux guest VM
-#
-$sts = check_fcopy_daemon
-if (-not $sts[-1]) {
-    Write-Output "ERROR: File copy daemon is not running inside the Linux guest VM!" | Tee-Object -Append -file $summaryLog
-    $retVal = $False
+# Check to see if the fcopy daemon is running on the VM
+$sts = RunRemoteScript "FCOPY_Check_Daemon.sh"
+if (-not $sts[-1])
+{
+    Write-Output "Error executing FCOPY_Check_Daemon.sh on VM. Exiting test case!" | Tee-Object -Append -file $summaryLog
+    return $False
 }
+
+Remove-Item -Path "FCOPY_Check_Daemon.sh.log" -Force
+Write-Output "Info: fcopy daemon is running on VM '${vmName}'"
 
 $sts = mount_disk
 if (-not $sts[-1]) {
@@ -315,7 +267,7 @@ Write-Output "The file copy process took ${copyDuration} seconds" | Tee-Object -
 #
 # Checking if the file is present on the guest and file size is matching
 #
-$sts = check_file $testfile
+$sts = CheckFile /tmp/$testfile
 if (-not $sts[-1]) {
 	Write-Output "ERROR: File is not present on the guest VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
 	$retVal = $False

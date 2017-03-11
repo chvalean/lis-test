@@ -52,6 +52,7 @@
 	<testCases>
 		<test>
 			<testName>FCOPY_basic</testName>
+			<files>remote-scripts/ica/utils.sh</files>
 			<testScript>setupscripts\FCOPY_basic.ps1</testScript>
 			<timeout>900</timeout>
 			<testParams>
@@ -62,16 +63,19 @@
 
 		<test>
 			<testName>FCOPY_file_exists</testName>
-			<testScript>setupscripts\FCOPY_file_exists.ps1</testScript>
+			<files>remote-scripts/ica/utils.sh</files>
+			<testScript>setupscripts\FCOPY_basic.ps1</testScript>
 			<timeout>900</timeout>
 			<testParams>
 				<param>TC_COVERED=FCopy-02</param>
+				<param>file_exists_check=$True</param>
 			</testParams>
 			<noReboot>True</noReboot>
 		</test>
 
 		<test>
 			<testName>FCOPY_overwrite</testName>
+			<files>remote-scripts/ica/utils.sh</files>
 			<testScript>setupscripts\FCOPY_overwrite.ps1</testScript>
 			<timeout>900</timeout>
 			<testParams>
@@ -83,14 +87,15 @@
 		<test>
 			<testName>FCOPY_large_file</testName>
 			<setupScript>setupScripts\Add-VHDXForResize.ps1</setupScript>
+			<files>remote-scripts/ica/utils.sh</files>
 			<testScript>setupscripts\FCOPY_large_file.ps1</testScript>
 			<cleanupScript>SetupScripts\Remove-VHDXHardDisk.ps1</cleanupScript>
 			<timeout>1200</timeout>
 			<testParams>
 				<param>TC_COVERED=FCopy-04</param>
-        <param>Type=Fixed</param>
-        <param>SectorSize=512</param>
-        <param>DefaultSize=15GB</param>
+				<param>Type=Fixed</param>
+				<param>SectorSize=512</param>
+				<param>DefaultSize=15GB</param>
 				<param>ControllerType=SCSI</param>
 			</testParams>
 			<noReboot>False</noReboot>
@@ -110,16 +115,17 @@
 		<test>
 			<testName>FCOPY_repeat</testName>
 			<setupScript>setupScripts\Add-VHDXForResize.ps1</setupScript>
+			<files>remote-scripts/ica/utils.sh</files>
 			<testScript>setupscripts\FCOPY_repeated_delete.ps1</testScript>
 			<cleanupScript>SetupScripts\Remove-VHDXHardDisk.ps1</cleanupScript>
 			<timeout>1200</timeout>
 			<testParams>
 				<param>TC_COVERED=FCopy-06</param>
-		    <param>Type=Fixed</param>
-		    <param>SectorSize=512</param>
-		    <param>DefaultSize=3GB</param>
-        <param>ControllerType=SCSI</param>
-		    <!--Make sure DefaultSize is equal or bigger than FileSize-->
+				<param>Type=Fixed</param>
+				<param>SectorSize=512</param>
+				<param>DefaultSize=3GB</param>
+				<param>ControllerType=SCSI</param>
+				<!--Make sure DefaultSize is equal or bigger than FileSize-->
 				<param>FileSize=2GB</param>
 			</testParams>
 			<noReboot>False</noReboot>

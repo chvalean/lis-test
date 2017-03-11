@@ -49,58 +49,25 @@
     Test data for this test case.
 
 .Example
-    setupScripts\FCOPY_basic.ps1 -vmName NameOfVm -hvServer localhost -testParams 'sshKey=path/to/ssh;ipv4=ipaddress'
+    setupScripts\FCOPY_basic.ps1 -vmName NameOfVm -hvServer localhost -testParams 'sshKey=path/to/ssh;ipv4=ipaddress;rootDir=C:\lisa'
 #>
 
 param([string] $vmName, [string] $hvServer, [string] $testParams)
 
-$retVal = $false
 $testfile = $null
+$file_exists_check = $null
 $gsi = $null
 
 #######################################################################
 #
-#	Checks if the file copy daemon is running on the Linux guest
-#
-#######################################################################
-function check_fcopy_daemon()
-{
-	$filename = ".\fcopy_present"
-    
-    .\bin\plink -i ssh\${sshKey} root@${ipv4} "ps -ef | grep '[h]v_fcopy_daemon\|[h]ypervfcopyd' > /tmp/fcopy_present"
-    if (-not $?) {
-        Write-Error -Message  "ERROR: Unable to verify if the fcopy daemon is running" -ErrorAction SilentlyContinue
-        Write-Output "ERROR: Unable to verify if the fcopy daemon is running"
-        return $False
-    }
-
-    .\bin\pscp -i ssh\${sshKey} root@${ipv4}:/tmp/fcopy_present .
-    if (-not $?) {
-		Write-Error -Message "ERROR: Unable to copy the confirmation file from the VM" -ErrorAction SilentlyContinue
-		Write-Output "ERROR: Unable to copy the confirmation file from the VM"
-		return $False
-    }
-
-    # When using grep on the process in file, it will return 1 line if the daemon is running
-    if ((Get-Content $filename  | Measure-Object -Line).Lines -eq  "1" ) {
-		Write-Output "Info: hv_fcopy_daemon process is running."  
-		$retValue = $True
-    }
-	
-    del $filename   
-    return $retValue 
-}
-
-#######################################################################
-#
-#	Checks if test file is present
+#	Checks if test file is present and report file size
 #
 #######################################################################
 function check_file([String] $testfile)
 {
     .\bin\plink -i ssh\${sshKey} root@${ipv4} "wc -c < /tmp/$testfile"
     if (-not $?) {
-        Write-Output "ERROR: Unable to read file" -ErrorAction SilentlyContinue
+        Write-Output "ERROR: Unable to read the test file!" -ErrorAction SilentlyContinue
         return $False
     }
 	return $True
@@ -111,22 +78,21 @@ function check_file([String] $testfile)
 #	Main body script
 #
 #######################################################################
-
 # Checking the input arguments
 if (-not $vmName) {
     "Error: VM name is null!"
-    return $retVal
+    return $False
 }
 
 if (-not $hvServer) {
     "Error: hvServer is null!"
-    return $retVal
+    return $False
 }
 
 if (-not $testParams) {
     "Error: No testParams provided!"
-    "This script requires the test case ID and VM details as the test parameters."
-    return $retVal
+    "This script requires the VM name and Hyper-V server details as test parameters."
+    return $False
 }
 
 #
@@ -148,24 +114,33 @@ foreach ($p in $params) {
 	if ($fields[0].Trim() -eq "sshkey") {
         $sshkey = $fields[1].Trim()
     }
+	if ($fields[0].Trim() -eq "file_exists_check") {
+        $file_exists_check = $fields[1].Trim()
+    }
 }
 
 #
 # Change the working directory for the log files
-# Delete any previous summary.log file, then create a new one
 #
 if (-not (Test-Path $rootDir)) {
     "Error: The directory `"${rootDir}`" does not exist"
-    return $retVal
+    return $False
 }
 cd $rootDir
+
+# Source TCUtils.ps1 for test related functions
+if (Test-Path ".\setupscripts\TCUtils.ps1") {
+    . .\setupScripts\TCUtils.ps1
+}
+else {
+    "Error: Could not find setupScripts\TCUtils.ps1"
+    return $False
+}
 
 # Delete any previous summary.log file, then create a new one
 $summaryLog = "${vmName}_summary.log"
 del $summaryLog -ErrorAction SilentlyContinue
 Write-Output "This script covers test case: ${TC_COVERED}" | Tee-Object -Append -file $summaryLog
-
-$retVal = $True
 
 #
 # Verify if the Guest services are enabled for this VM
@@ -212,10 +187,9 @@ $testfile = "testfile-$(get-date -uformat '%H-%M-%S-%Y-%m-%d').file"
 $filePath = $vhd_path + $testfile
 $file_path_formatted = $vhd_path_formatted + $testfile
 
-
 if ($gsi.OperationalStatus -ne "OK") {
     "Error: The Guest services are not working properly for VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
-	$retVal = $False
+	return $False
 }
 else {
 	# Create a 10MB sample file
@@ -223,23 +197,20 @@ else {
 
 	if ($createfile -notlike "File *testfile-*.file is created") {
 		"Error: Could not create the sample test file in the working directory!" | Tee-Object -Append -file $summaryLog
-		$retVal = $False
+		return $False
 	}
 }
 
-# Verifying if /tmp folder on guest exists; if not, it will be created
-.\bin\plink.exe -i ssh\${sshKey} root@${ipv4} "[ -d /tmp ]"
-if (-not $?){
-    Write-Output "Folder /tmp not present on guest. It will be created"
-    .\bin\plink.exe -i ssh\${sshKey} root@${ipv4} "mkdir /tmp"
+# Check to see if the fcopy daemon is running on the VM
+$sts = RunRemoteScript "FCOPY_Check_Daemon.sh"
+if (-not $sts[-1])
+{
+    Write-Output "Error executing FCOPY_Check_Daemon.sh on VM. Exiting test case!" | Tee-Object -Append -file $summaryLog
+    return $False
 }
 
-# The fcopy daemon must be running on the Linux guest VM
-$sts = check_fcopy_daemon
-if (-not $sts[-1]) {
-    Write-Output "ERROR: file copy daemon is not running inside the Linux guest VM!" | Tee-Object -Append -file $summaryLog
-    $retVal = $False
-}
+Remove-Item -Path "FCOPY_Check_Daemon.sh.log" -Force
+Write-Output "Info: fcopy daemon is running on VM '${vmName}'"
 
 # Removing previous test files on the VM
 .\bin\plink.exe -i ssh\${sshKey} root@${ipv4} "rm -f /tmp/testfile-*"
@@ -247,26 +218,39 @@ if (-not $sts[-1]) {
 # If we got here then all checks have passed and we can copy the file to the Linux guest VM
 $Error.Clear()
 Copy-VMFile -vmName $vmName -ComputerName $hvServer -SourcePath $filePath -DestinationPath "/tmp/" -FileSource host -ErrorAction SilentlyContinue
-if ($Error.Count -eq 0) {
-	Write-Output "File has been successfully copied to guest VM '${vmName}'" | Tee-Object -Append -file $summaryLog
+if ($error.Count -eq 0) {
+	# Checking if the file size is matching
+	$sts = check_file $testfile
+	if (-not $sts[-1]) {
+		Write-Output "ERROR: File is not present on the guest VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
+		return $False
+	}
+	elseif ($sts[0] -eq 10485760) {
+		Write-Output "Info: The file copied matches the 10MB size." | Tee-Object -Append -file $summaryLog
+	}
+    else {
+	    Write-Output "ERROR: The file copied doesn't match the 10MB size!" | Tee-Object -Append -file $summaryLog
+	    return $False
+    }
 }
-elseif (($Error.Count -gt 0) -and ($Error[0].Exception.Message -like "*failed to initiate copying files to the guest: The file exists. (0x80070050)*")) {
-	Write-Output "Test failed! File could not be copied as it already exists on guest VM '${vmName}'" | Tee-Object -Append -file $summaryLog
-	$retVal = $False
+elseif ($Error.Count -gt 0) {
+	Write-Output "Test Failed. An error has occurred while copying the file to guest VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
+	$error[0] | Tee-Object -Append -file $summaryLog
+	return $False
 }
 
-# Checking if the file size is matching
-$sts = check_file $testfile
-if (-not $sts[-1]) {
-	Write-Output "ERROR: File is not present on the guest VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
-	$retVal = $False
-}
-elseif ($sts[0] -eq 10485760) {
-	Write-Output "Info: The file copied matches the 10MB size." | Tee-Object -Append -file $summaryLog
-}
-else {
-	Write-Output "ERROR: The file copied doesn't match the 10MB size!" | Tee-Object -Append -file $summaryLog
-	$retVal = $False
+if ($file_exists_check) {
+	$Error.Clear()
+	# Second copy file attempt must fail with the below error code pattern
+	Copy-VMFile -vmName $vmName -ComputerName $hvServer -SourcePath $filePath -DestinationPath "/tmp/" -FileSource host -ErrorAction SilentlyContinue
+
+	if ($Error[0].Exception.Message -like "*failed to initiate copying files to the guest: The file exists. (0x80070050)*") {
+		Write-Output "Test passed! File could not be copied as it already exists on guest VM '${vmName}'" | Tee-Object -Append -file $summaryLog
+	}
+	elseif ($error.Count -eq 0) {
+		Write-Output "Error: File '${testfile}' has been copied twice to guest VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
+		return $False
+	}
 }
 
 # Removing the temporary test file
@@ -275,4 +259,8 @@ if ($? -ne "True") {
     Write-Output "ERROR: cannot remove the test file '${testfile}'!" | Tee-Object -Append -file $summaryLog
 }
 
-return $retVal
+#
+# If we made it here, everything worked
+#
+Write-Output "Test completed successfully"
+return $True

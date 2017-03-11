@@ -3,11 +3,11 @@
 # Linux on Hyper-V and Azure Test Code, ver. 1.0.0
 # Copyright (c) Microsoft Corporation
 #
-# All rights reserved. 
+# All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the ""License"");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#     http://www.apache.org/licenses/LICENSE-2.0  
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # THIS CODE IS PROVIDED *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
 # OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
@@ -62,66 +62,6 @@ $gsi = $null
 
 #######################################################################
 #
-#	Checks if the file copy daemon is running on the Linux guest
-#
-#######################################################################
-function check_fcopy_daemon()
-{
-	$filename = ".\fcopy_present"
-    
-    .\bin\plink -i ssh\${sshKey} root@${ipv4} "ps -ef | grep '[h]v_fcopy_daemon\|[h]ypervfcopyd' > /tmp/fcopy_present"
-    if (-not $?) {
-        Write-Error -Message  "ERROR: Unable to verify if the fcopy daemon is running" -ErrorAction SilentlyContinue
-        Write-Output "ERROR: Unable to verify if the fcopy daemon is running"
-        return $False
-    }
-
-    .\bin\pscp -i ssh\${sshKey} root@${ipv4}:/tmp/fcopy_present .
-    if (-not $?) {
-		Write-Error -Message "ERROR: Unable to copy the confirmation file from the VM" -ErrorAction SilentlyContinue
-		Write-Output "ERROR: Unable to copy the confirmation file from the VM"
-		return $False
-    }
-
-    # When using grep on the process in file, it will return 1 line if the daemon is running
-    if ((Get-Content $filename  | Measure-Object -Line).Lines -eq  "1" ) {
-		Write-Output "Info: hv_fcopy_daemon process is running."  
-		$retValue = $True
-    }
-	
-    del $filename   
-    return $retValue 
-}
-
-#######################################################################
-#
-#	Check if the test file is present, and get the size and content
-#
-#######################################################################
-function check_file([String] $testfile)
-{
-    .\bin\plink -i ssh\${sshKey} root@${ipv4} "wc -c < /tmp/$testfile"
-    if (-not $?) {
-        Write-Output "ERROR: Unable to read file /tmp/$testfile." -ErrorAction SilentlyContinue
-        return $False
-    }
-
-    $sts = SendCommandToVM $ipv4 $sshKey "dos2unix /tmp/$testfile"
-    if (-not $sts) {
-        Write-Output "ERROR: Failed to convert file /tmp/$testfile to unix format." -ErrorAction SilentlyContinue
-        return $False
-    }
-
-	.\bin\plink -i ssh\${sshKey} root@${ipv4} "cat /tmp/$testfile"
-    if (-not $?) {
-        Write-Output "ERROR: Unable to read file /tmp/$testfile." -ErrorAction SilentlyContinue
-        return $False
-    }
-    return $True
-}
-
-#######################################################################
-#
 #	Generate random string
 #
 #######################################################################
@@ -170,7 +110,7 @@ function copy_and_check_file([String] $testfile, [Boolean] $overwrite, [Int] $co
         Copy-VMFile -vmName $vmName -ComputerName $hvServer -SourcePath $filePath -DestinationPath "/tmp/" -FileSource host -ErrorAction SilentlyContinue
     }
     if ($Error.Count -eq 0) {
-        $sts = check_file $testfile
+        $sts = CheckFile /tmp/$testfile
         if (-not $sts[-1]) {
             Write-Output "ERROR: File is not present on the guest VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
             return $False
@@ -201,7 +141,6 @@ function copy_and_check_file([String] $testfile, [Boolean] $overwrite, [Int] $co
 #	Main body script
 #
 #######################################################################
-
 # Checking the input arguments
 if (-not $vmName) {
     "Error: VM name is null!"
@@ -293,21 +232,16 @@ if ($gsi.OperationalStatus -ne "OK") {
 	$retVal = $False
 }
 
-# Verifying if /tmp folder on guest exists; if not, it will be created
-.\bin\plink.exe -i ssh\${sshKey} root@${ipv4} "[ -d /tmp ]"
-if (-not $?){
-    Write-Output "Folder /tmp not present on guest. It will be created"
-    .\bin\plink.exe -i ssh\${sshKey} root@${ipv4} "mkdir /tmp"
+# Check to see if the fcopy daemon is running on the VM
+$sts = RunRemoteScript "FCOPY_Check_Daemon.sh"
+if (-not $sts[-1])
+{
+    Write-Output "Error executing FCOPY_Check_Daemon.sh on VM. Exiting test case!" | Tee-Object -Append -file $summaryLog
+    return $False
 }
 
-#
-# The fcopy daemon must be running on the Linux guest VM
-#
-$sts = check_fcopy_daemon
-if (-not $sts[-1]) {
-    Write-Output "ERROR: file copy daemon is not running inside the Linux guest VM!" | Tee-Object -Append -file $summaryLog
-    $retVal = $False
-}
+Remove-Item -Path "FCOPY_Check_Daemon.sh.log" -Force
+Write-Output "Info: fcopy daemon is running on VM '${vmName}'"
 
 # Define the file-name to use with the current time-stamp
 $testfile = "testfile-$(get-date -uformat '%H-%M-%S-%Y-%m-%d').file" 

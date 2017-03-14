@@ -138,34 +138,7 @@ Write-Output "This script covers test case: ${TC_COVERED}" | Tee-Object -Append 
 #
 # Verify if the Guest services are enabled for this VM
 #
-$gsi = Get-VMIntegrationService -vmName $vmName -ComputerName $hvServer -Name "Guest Service Interface"
-if (-not $gsi) {
-    Write-Output "Error: Unable to retrieve Integration Service status for VM '${vmName}'" | Tee-Object -Append -file $summaryLog
-    return $False
-}
-
-if (-not $gsi.Enabled) {
-    Write-Output "Warning: The Guest services are not enabled for VM '${vmName}'" | Tee-Object -Append -file $summaryLog
-    if ((Get-VM -ComputerName $hvServer -Name $vmName).State -ne "Off") {
-        Stop-VM -ComputerName $hvServer -Name $vmName -Force -Confirm:$false
-    }
-
-    # Waiting until the VM is off
-    while ((Get-VM -ComputerName $hvServer -Name $vmName).State -ne "Off") {
-        Start-Sleep -Seconds 5
-    }
-    
-    Enable-VMIntegrationService -Name "Guest Service Interface" -vmName $vmName -ComputerName $hvServer 
-    Start-VM -Name $vmName -ComputerName $hvServer
-
-    # Waiting for the VM to run again and respond to SSH - port 22
-    do {
-        sleep 5
-    } until (Test-NetConnection $IPv4 -Port 22 -WarningAction SilentlyContinue | ? { $_.TcpTestSucceeded } )
-}
-else {
-    Write-Output "Info: Guest services are enabled on VM '${vmName}'"       
-}
+enable_GuestIntegrationServices()
 
 # Check to see if the fcopy daemon is running on the VM
 $sts = RunRemoteScript "FCOPY_Check_Daemon.sh"

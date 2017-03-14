@@ -28,9 +28,6 @@
     commonly used by PowerShell test case scripts and setup scripts.
 #>
 
-
-
-
 #####################################################################
 #
 # GetFileFromVM()
@@ -1392,11 +1389,14 @@ function KvpToDict($rawData)
 
 
 #######################################################################
-# To Get Parent VHD from VM.
+#
+# To Get Parent VHD from VM
+#
 #######################################################################
 function GetParentVHD($vmName, $hvServer)
 {
     $ParentVHD = $null
+    $VmInfo = $null
 
     $VmInfo = Get-VM -Name $vmName -ComputerName $hvServer
     if (-not $VmInfo) {
@@ -1446,9 +1446,15 @@ function GetParentVHD($vmName, $hvServer)
 }
 
 
+#######################################################################
+#
+# Create a child VHD based on a parent VHD file
+#
+#######################################################################
 function CreateChildVHD($ParentVHD, $defaultpath, $hvServer)
 {
-    $ChildVHD  = $null
+    $ChildVHD = $null
+    $hostInfo = $null
     $hostInfo = Get-VMHost -ComputerName $hvServer
     if (-not $hostInfo) {
         Write-Error -Message "Error: Unable to collect Hyper-V settings for $hvServer" -ErrorAction SilentlyContinue
@@ -1476,4 +1482,47 @@ function CreateChildVHD($ParentVHD, $defaultpath, $hvServer)
     }
 
     return $ChildVHD
+}
+
+
+#######################################################################
+#
+# Enable the Guest Integration Services for a VM
+#
+#######################################################################
+function enable_GuestIntegrationServices($vmName, $hvServer)
+{
+    $gsi = $null
+    $gsi = Get-VMIntegrationService -vmName $vmName -ComputerName $hvServer -Name "Guest Service Interface"
+    if (-not $gsi) {
+        Write-Error -Message "Error: Unable to retrieve Integration Service status from VM '${vmName}'" | Tee-Object -Append -file $summaryLog
+        return $False
+    }
+
+    if (-not $gsi.Enabled) {
+        Write-Output "Warning: The Guest services are not enabled for VM '${vmName}'" | Tee-Object -Append -file $summaryLog
+        if ((Get-VM -ComputerName $hvServer -Name $vmName).State -ne "Off") {
+            Stop-VM -ComputerName $hvServer -Name $vmName -Force -Confirm:$false
+    }
+
+    # Waiting until the VM is off
+    while ((Get-VM -ComputerName $hvServer -Name $vmName).State -ne "Off") {
+        Start-Sleep -Seconds 5
+    }
+
+    Enable-VMIntegrationService -Name "Guest Service Interface" -vmName $vmName -ComputerName $hvServer 
+    Start-VM -Name $vmName -ComputerName $hvServer
+
+    # Waiting for the VM to run again and respond to SSH - port 22
+    do {
+        sleep 5
+    } until (Test-NetConnection $IPv4 -Port 22 -WarningAction SilentlyContinue | ? { $_.TcpTestSucceeded } )
+    }
+
+    if ($gsi.OperationalStatus -ne "OK") {
+        Write-Error -Message "Error: The Guest services are not working properly for VM '${vmName}'!" | Tee-Object -Append -file $summaryLog
+        return $False
+    }
+
+    return $True
 }

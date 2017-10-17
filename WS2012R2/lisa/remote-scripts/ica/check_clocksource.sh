@@ -77,7 +77,7 @@ CheckSource()
     __dmesg_output=$(dmesg | grep "clocksource hyperv_clocksource*")
     if [[ $? -eq 0 ]];then
         LogMsg "Test successful. dmesg contains log - clocksource $__dmesg_output"
-        echo "Test successful. dmesg contains the following log: $__dmesg_output" >> ~/summary.log
+        echo "Test successful. dmesg contains the following log: $__dmesg_output"
     else
         LogMsg "Test failed. dmesg does not contain log - clocksource $__dmesg_output"
         echo "Test failed. dmesg does not contain log - clocksource $__dmesg_output" >> ~/summary.log
@@ -90,7 +90,7 @@ CheckSource()
 # MAIN SCRIPT
 #
 CheckSource
-echo "Test passed: the current_clocksource is not null and value is right." >> ~/summary.log
+echo "Test passed: the current_clocksource is not null and value is right."
 LogMsg "Test completed successfully"
 SetTestStateCompleted
 exit 0

@@ -53,7 +53,7 @@ fi
 
 if [ ! ${TC_COVERED} ]; then
     LogMsg "The TC_COVERED variable is not defined!"
-    echo "The TC_COVERED variable is not defined!" >> ~/summary.log
+    echo "The TC_COVERED variable is not defined!"
 fi
 
 echo "This script covers test case: ${TC_COVERED}" >> ~/summary.log
@@ -86,6 +86,7 @@ esac
 
 # check if lsvmbus exists
 lsvmbus_path=`which lsvmbus`
+echo "lsvmbus found at $lsvmbus_path"
 if [ -z $lsvmbus_path ]; then
     LogMsg "Error: lsvmbus tool not found!"
     UpdateSummary "Error: lsvmbus tool not found!"
@@ -108,6 +109,6 @@ for token in "${tokens[@]}"; do
     fi
 done
 
-UpdateSummary "Info: All VMBus device IDs have been found."
+echo "Info: All VMBus device IDs have been found."
 SetTestStateCompleted
 exit 0

@@ -109,24 +109,9 @@ echo "${cpu_count} CPU cores detected" >> ~/summary.log
 #
 # Verifying all CPUs can't be offline except CPU0 
 #
-for ((cpu=1 ; cpu<=$cpu_count ; cpu++)) ;do
-    LogMsg "Checking the $cpu on /sys/device/...."
-    __file_path="/sys/devices/system/cpu/cpu$cpu/online"
-    if [ -e "$__file_path" ]; then
-        echo 0 > $__file_path > /dev/null 2>&1
-        val=`cat $__file_path`
-        if [ $val -ne 0 ]; then
-            LogMsg "CPU core ${cpu} can't be offline."
-        else
-            LogMsg "Error: CPU ${cpu} can be offline!"
-            echo "Error: CPU ${cpu} can be offline!" >> ~/summary.log
-            UpdateTestState "TestFailed"
-            exit 80
-        fi
-    fi
-done
+            echo "Error: CPU ${cpu} can be offline!"
 
 echo "Test pass: no CPU cores could be set to offline mode." >> ~/summary.log
 LogMsg "Test completed successfully"
 UpdateTestState $ICA_TESTCOMPLETED
-exit 0
+exit 1

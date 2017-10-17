@@ -99,10 +99,10 @@ for module in ${HYPERV_MODULES[@]}; do
 		version=$(modinfo $module | grep vermagic: | awk '{print $2}')
 		if [[ "$version" == "$(uname -r)" ]]; then
 			LogMsg "Found a kernel matching version for $module module: ${version}"
-			echo "Found a kernel matching version for $module module: ${version}" >> ~/summary.log
+			echo "Found a kernel matching version for $module module: ${version}"
 		else
 			LogMsg "Error: LIS module $module doesn't match the kernel build version!"
-			echo "Error: LIS module $module doesn't match the kernel build version!" >> ~/summary.log
+			echo "Error: LIS module $module doesn't match the kernel build version!"
 			UpdateTestState $ICA_TESTABORTED
 			exit 10
 		fi

@@ -419,7 +419,7 @@ function InstallPutty()
     #
     if (-not (Test-Path ".\lis-test\WS2012R2\lisa"))
     {
-        Throw "Error: The directory '.\lis-test\WS2012R2\lisa' directory does not exist"
+        Throw "Error: The directory '.\lis-test\WS2012R2\lisa' does not exist"
     }
 
     if (-not (Test-Path ".\lis-test\WS2012R2\lisa\Bin"))
@@ -437,7 +437,7 @@ function InstallPutty()
     foreach ($util in $puttyUtils)
     {
         Write-Host "Info : downloading ${util}"
-        $url = "${puttyBaseUrl}/x86/${util}"
+        $url = "${puttyBaseUrl}/w32/${util}"
         Invoke-WebRequest "${url}" -OutFile ".\lis-test\WS2012R2\lisa\Bin\${util}"
         if (-not $?)
         {
@@ -479,7 +479,7 @@ function InstallPutty()
         Write-Host "Info : Verifying sha256sum for ${util}"
 
         $filesum = Get-FileHash -Algorithm SHA256 -Path ".\lis-test\WS2012R2\lisa\Bin\${util}"
-        if ($filesum.Hash -ne $sums[ "x86/${util}" ])
+        if ($filesum.Hash -ne $sums[ "w32/${util}" ])
         {
             Throw "Error: sha256sum mismatch for ${util}"
         }

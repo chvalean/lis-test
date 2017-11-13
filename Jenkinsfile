@@ -13,8 +13,8 @@ pipeline {
           steps {
             dir(path: 'WS2012R2/lisa/remote-scripts/ica/') {
               sh '''touch /var/lib/jenkins/constants.sh
-echo "HYPERV_MODULES=(hyperv_keyboard hv_netvsc hid_hyperv hv_util hv_storvsc)" > /var/lib/jenkins/constants.sh'''
-              sh 'bash -xe \'./vmbus_protocol_version.sh\''
+echo "vCPU=1" > /var/lib/jenkins/constants.sh'''
+              sh 'bash -xe \'./vcpu_verify_online.sh\''
             }
             
           }

@@ -24,6 +24,7 @@ pipeline {
     stage('report') {
       steps {
         sh 'junit \'/var/lib/jenkins/summary.xml\''
+        junit(allowEmptyResults: true, testResults: '/var/lib/jenkins/*.xml')
       }
     }
   }

@@ -16,7 +16,7 @@ pipeline {
         }
         stage('run bash script') {
           steps {
-            sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/vcpu_verify_online.sh\''
+            sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/check_clocksource.sh\''
           }
         }
       }
@@ -32,4 +32,9 @@ pipeline {
       }
     }
   }
+  post {
+        always {
+            junit 'summary.log'
+        }
+    }
 }

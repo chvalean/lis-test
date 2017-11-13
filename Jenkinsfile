@@ -11,6 +11,7 @@ pipeline {
         stage('run script') {
           steps {
             sh 'bash \'./lis-test/WS2012R2/lisa/remote-scripts/ica/vcpu_verify_online.sh\''
+            sh 'pwd'
           }
         }
       }

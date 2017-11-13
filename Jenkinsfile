@@ -16,7 +16,7 @@ pipeline {
         }
         stage('run bash script') {
           steps {
-            sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/check_clocksource.sh\''
+            sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/CORE_LISmodules_version.sh\''
           }
         }
       }

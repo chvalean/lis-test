@@ -12,6 +12,7 @@ pipeline {
         stage('run bash script') {
           steps {
             dir(path: 'WS2012R2/lisa/remote-scripts/ica/') {
+              sh 'sudo touch /var/lib/jenkins/constants.sh'
               sh 'bash -xe \'./lsvmbus_basic.sh\''
             }
             

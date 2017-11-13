@@ -12,8 +12,9 @@ pipeline {
         stage('run bash script') {
           steps {
             dir(path: 'WS2012R2/lisa/remote-scripts/ica/') {
-              sh 'touch /var/lib/jenkins/constants.sh'
-              sh 'bash -xe \'./lsvmbus_basic.sh\''
+              sh '''touch /var/lib/jenkins/constants.sh
+echo HYPERV_MODULES=(hyperv_keyboard hv_netvsc hid_hyperv hv_util hv_storvsc) > /var/lib/jenkins/constants.sh'''
+              sh 'bash -xe \'./CORE_LISmodules_version.sh\''
             }
             
           }

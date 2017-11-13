@@ -23,16 +23,8 @@ pipeline {
     }
     stage('report') {
       steps {
-        sh 'junit \'/var/lib/jenkins/summary.xml\''
-        junit(allowEmptyResults: true, testResults: '/var/lib/jenkins/*.xml')
+        junit(allowEmptyResults: true, testResults: '/var/lib/jenkins/summary.xml')
       }
     }
-  }
-  post {
-    always {
-      junit '/var/lib/jenkins/summary.xml'
-      
-    }
-    
   }
 }

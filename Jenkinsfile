@@ -22,8 +22,17 @@ pipeline {
       }
     }
     stage('report') {
-      steps {
-        junit(allowEmptyResults: true, testResults: '/var/lib/jenkins/summary.xml')
+      parallel {
+        stage('report') {
+          steps {
+            junit(allowEmptyResults: true, testResults: '/var/lib/jenkins/summary.xml')
+          }
+        }
+        stage('artifacts archive') {
+          steps {
+            archiveArtifacts(artifacts: '/var/lib/jenkins/summary.log', allowEmptyArchive: true)
+          }
+        }
       }
     }
   }

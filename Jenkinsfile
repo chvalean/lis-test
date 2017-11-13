@@ -24,7 +24,7 @@ echo "vCPU=1" > /var/lib/jenkins/constants.sh'''
   }
   post {
     always {
-      junit 'summary.log'
+      junit '/var/lib/jenkins/summary.xml'
       
     }
     

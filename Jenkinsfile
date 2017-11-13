@@ -8,10 +8,15 @@ pipeline {
             echo 'hello. this is a test'
           }
         }
-        stage('run script') {
+        stage('get env info') {
           steps {
             sh 'pwd'
             sh 'ls'
+          }
+        }
+        stage('run bash script') {
+          steps {
+            sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/vcpu_verify_online.sh\''
           }
         }
       }

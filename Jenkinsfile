@@ -1,4 +1,3 @@
-
 pipeline {
   agent any
   stages {
@@ -17,18 +16,14 @@ pipeline {
 echo "vCPU=1" > /var/lib/jenkins/constants.sh'''
               sh 'bash -xe \'./vcpu_verify_online.sh\''
             }
-            
           }
-            post {
-    always {
-      junit '/var/lib/jenkins/summary.xml'
-      
-    }
-        }
       }
+            post {
+            always {
+                junit '/var/lib/jenkins/summary.xml'
+            }
+        }
     }
   }
-
-    
   }
 }

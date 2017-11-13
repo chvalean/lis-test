@@ -14,7 +14,7 @@ pipeline {
             dir(path: 'WS2012R2/lisa/remote-scripts/ica/') {
               sh '''touch /var/lib/jenkins/constants.sh
 echo "HYPERV_MODULES=(hyperv_keyboard hv_netvsc hid_hyperv hv_util hv_storvsc)" > /var/lib/jenkins/constants.sh'''
-              sh 'bash -xe \'./check_clocksource.sh\''
+              sh 'bash -xe \'./vmbus_protocol_version.sh\''
             }
             
           }

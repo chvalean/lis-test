@@ -1,3 +1,4 @@
+
 pipeline {
   agent any
   stages {
@@ -18,15 +19,16 @@ echo "vCPU=1" > /var/lib/jenkins/constants.sh'''
             }
             
           }
-        }
-      }
-    }
-  }
-  post {
+            post {
     always {
       junit '/var/lib/jenkins/summary.xml'
       
     }
+        }
+      }
+    }
+  }
+
     
   }
 }

@@ -3,11 +3,6 @@ pipeline {
   stages {
     stage('echo hello') {
       parallel {
-        stage('echo hello') {
-          steps {
-            echo 'hello. this is a test'
-          }
-        }
         stage('get env info') {
           steps {
             sh 'pwd'
@@ -16,25 +11,17 @@ pipeline {
         }
         stage('run bash script') {
           steps {
-            sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/CORE_LISmodules_version.sh\''
+            sh 'bash -xe \'./WS2012R2/lisa/remote-scripts/ica/CORE_LISmodules_version.sh\''
           }
         }
       }
     }
-    stage('print current dir') {
-      steps {
-        pwd(tmp: true)
-      }
-    }
-    stage('build artifacts') {
-      steps {
-        archiveArtifacts(allowEmptyArchive: true, artifacts: 'test')
-      }
-    }
   }
   post {
-        always {
-            junit 'summary.log'
-        }
+    always {
+      junit 'summary.log'
+      
     }
+    
+  }
 }

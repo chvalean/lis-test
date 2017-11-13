@@ -16,11 +16,7 @@ pipeline {
         }
         stage('run bash script') {
           steps {
-            try {
             sh 'bash \'./WS2012R2/lisa/remote-scripts/ica/vcpu_verify_online.sh\''
-            } catch (err) {
-              echo "test failed to execute"
-            }
           }
         }
       }

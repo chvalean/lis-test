@@ -30,7 +30,7 @@ pipeline {
         }
         stage('artifacts archive') {
           steps {
-            archiveArtifacts(artifacts: '/var/lib/jenkins/summary.log', allowEmptyArchive: true)
+            archive('/var/lib/jenkins/summary.log')
           }
         }
       }

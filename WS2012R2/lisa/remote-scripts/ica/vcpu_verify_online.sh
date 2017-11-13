@@ -115,4 +115,4 @@ echo "${cpu_count} CPU cores detected" >> ~/summary.log
 echo "Test pass: no CPU cores could be set to offline mode." >> ~/summary.log
 LogMsg "Test completed successfully"
 UpdateTestState $ICA_TESTCOMPLETED
-exit 1
+exit 0

@@ -11,7 +11,8 @@ pipeline {
         }
         stage('run bash script') {
           steps {
-            sh 'bash -xe \'./WS2012R2/lisa/remote-scripts/ica/CORE_LISmodules_version.sh\''
+            dir(path: 'WS2012R2/lisa/remote-scripts/ica/')
+            sh 'bash -xe \'./CORE_LISmodules_version.sh\''
           }
         }
       }

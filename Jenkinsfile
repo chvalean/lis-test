@@ -1,20 +1,18 @@
 pipeline {
     agent any
-
+    tools {
+        maven 'Maven 3.5.0'
+        jdk 'jdk8'
+    }
     stages {
         stage('Build') {
             steps {
-                mvn(goals: 'clean compile')
+                sh 'mvn clean install'
             }
-        }
-        stage('Test'){
-            steps {
-                mvn(goals: 'test')
-            }
-        }
-        stage('Publish') {
-            steps {
-                junit 'target/surefire-reports/TEST*.xml'
+            post {
+                success {
+                    junit 'target/surefire-reports/**/*.xml'
+                }
             }
         }
     }

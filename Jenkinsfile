@@ -1,26 +1,21 @@
 pipeline {
-  agent any
-  stages {
-    stage('Init') {
-      steps {
-        echo 'Hello from the blue ocean!'
-        bat '''
-          path
-          set
-        '''
-      }
-    }
-    stage('Build') {
-      steps {        
-          bat 'mvn clean install'
-          junit(allowEmptyResults: true, testResults: 'target/surefire-reports/**/*.xml')
-      }
-      post {
-        success {
-          junit '**/target/surefire-reports/**/*.xml'
-          
+    agent any
+
+    stages {
+        stage('Build') {
+            steps {
+                mvn(goals: 'clean compile')
+            }
         }
-      }
+        stage('Test'){
+            steps {
+                mvn(goals: 'test')
+            }
+        }
+        stage('Publish') {
+            steps {
+                junit 'target/surefire-reports/TEST*.xml'
+            }
+        }
     }
-  }
 }

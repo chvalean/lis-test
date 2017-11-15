@@ -16,24 +16,22 @@ pipeline {
         echo "vCPU=1" > /var/lib/jenkins/constants.sh'''
               sh 'bash -xe \'./vcpu_verify_online.sh\''
             }
-            
           }
         }
+
       }
     }
     stage('report') {
-      parallel {
-        stage('report') {
-          steps {
-            junit '/var/lib/jenkins/*.xml'
-          }
-        }
         stage('artifacts archive') {
           steps {
             archive('/var/lib/jenkins/summary.log')
           }
         }
       }
-    }
   }
+    post {
+        always {
+            junit '/var/lib/jenkins/summary.xml'
+        }
+    }
 }

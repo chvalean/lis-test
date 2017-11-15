@@ -25,7 +25,7 @@ pipeline {
       parallel {
         stage('report') {
           steps {
-            junit(allowEmptyResults: true, testResults: '/var/lib/jenkins/summary.xml')
+            junit '/var/lib/jenkins/*.xml'
           }
         }
         stage('artifacts archive') {

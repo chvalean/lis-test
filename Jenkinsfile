@@ -18,16 +18,8 @@ pipeline {
             }
           }
         }
-
       }
     }
-    stage('report') {
-        stage('artifacts archive') {
-          steps {
-            archive('/var/lib/jenkins/summary.log')
-          }
-        }
-      }
   }
     post {
         always {

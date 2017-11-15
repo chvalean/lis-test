@@ -11,11 +11,12 @@ pipeline {
                 sh 'mvn test'
             }
         }
-            post {
-                success {
-                    junit 'target/**/*.xml'
-                }
-            }
+    }
+    post {
+        always {
+    // Archive Unit and integration test results, if any
+    junit allowEmptyResults: true,
+            testResults: '**/target/surefire-reports/TEST-*.xml, **/target/failsafe-reports/*.xml'
         }
     }
 }

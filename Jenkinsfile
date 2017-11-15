@@ -24,8 +24,7 @@ pipeline {
   }
   post {
     always {
-      junit '/var/lib/jenkins/summary.xml'
-      
+      junit 'build/reports/**/*.xml'
     }
     
   }

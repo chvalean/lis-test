@@ -13,6 +13,9 @@ pipeline {
       }
     }
   }
+  environment {
+    test_env_var = 'hello'
+  }
   post {
     always {
       junit(allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml, **/target/failsafe-reports/*.xml')
